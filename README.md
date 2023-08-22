@@ -25,4 +25,4 @@ The application offers the following features:
 
 Here's a screenshot of the application in action:
 
-![Application Screenshot](../realtime-editor/ReadMe_ss/Screenshot%20(832).png)
+![Application Screenshot](./ReadMe_ss/Screenshot%20(832).png)
