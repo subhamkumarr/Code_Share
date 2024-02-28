@@ -2,7 +2,7 @@
 
 This is a Live Code Sharing and Chatting application, built using Node.js, that is designed for coding interviews and bootcamps.
 
-## Getting Started
+## Getting Started:
 
 To run the application, follow these steps:
 
