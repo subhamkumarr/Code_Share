@@ -21,7 +21,7 @@ The application offers the following features:
 - Live code highlighting.
 - Real-time chatting functionality.
 
-## Application Screenshot
+## Application Screenshots:
 
 Here's a screenshot of the application in action:
 
@@ -34,4 +34,4 @@ Here's a screenshot of the application in action:
 ![Application Screenshot](./ReadMe_ss/Screenshot%20(838).png)
 
 
-
+## Thank You for visiting ☺️
