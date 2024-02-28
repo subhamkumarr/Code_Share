@@ -10,7 +10,7 @@ To run the application, follow these steps:
 2. Run `npm install` to install the necessary Node.js packages.
 3. Run `npm start` to launch the app. It will be accessible at [http://localhost:5000](http://localhost:5000).
 
-## Application Features
+## Application Features:
 
 The application offers the following features:
 
