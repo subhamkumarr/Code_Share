@@ -1,6 +1,6 @@
 # Live Code Sharing and Chatting Application
 
-This is a Live Code Sharing and Chatting application, built using Node.js, that is designed for coding interviews and bootcamps.
+As a vital tool for coding interviews and boot camps, CodeChat facilitates seamless live code sharing and interactive chatting features. Empowering collaborative problem-solving, it enhances learning and fosters community engagement within the coding realm.
 
 ## Getting Started:
 
