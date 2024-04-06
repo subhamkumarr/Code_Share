@@ -2,14 +2,6 @@
 
 As a vital tool for coding interviews and boot camps, CodeChat facilitates seamless live code sharing and interactive chatting features. Empowering collaborative problem-solving, it enhances learning and fosters community engagement within the coding realm.
 
-## Getting Started:
-
-To run the application, follow these steps:
-
-1. Clone the project.
-2. Run `npm install` to install the necessary Node.js packages.
-3. Run `npm start` to launch the app. It will be accessible at [http://localhost:5000](http://localhost:5000).
-
 ## Application Features:
 
 The application offers the following features:
