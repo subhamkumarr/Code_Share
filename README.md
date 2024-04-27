@@ -1,4 +1,4 @@
-# Live Code Sharing and Chatting Application
+# Realtime Code Sharing and Chatting Application
 
 As a vital tool for coding interviews and boot camps, CodeChat facilitates seamless live code sharing and interactive chatting features. Empowering collaborative problem-solving, it enhances learning and fosters community engagement within the coding realm.
 
