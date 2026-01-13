@@ -8,8 +8,11 @@ const ACTIONS = require('./src/Actions');
 const server = http.createServer(app);
 const io = new Server(server);
 
- app.use(express.static(__dirname + '/build/'));
-app.use((req, res, next) => {
+// Serve static files from build directory
+app.use(express.static(__dirname + '/build/'));
+
+// Catch-all handler: serve index.html for all non-API routes (must be last)
+app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
@@ -30,6 +33,10 @@ io.on('connection', (socket) => {
     console.log('socket connected', socket.id);
 
     socket.on(ACTIONS.JOIN, ({ roomId, username }) => {
+        if(!roomId || !username) {
+            console.error('Invalid JOIN request: missing roomId or username');
+            return;
+        }
         userSocketMap[socket.id] = username;
         socket.join(roomId);
         const clients = getAllConnectedClients(roomId);
@@ -43,11 +50,18 @@ io.on('connection', (socket) => {
     });
 
     socket.on(ACTIONS.CODE_CHANGE, ({ roomId, code }) => {
-        
+        if(!roomId) {
+            console.error('Invalid CODE_CHANGE request: missing roomId');
+            return;
+        }
         socket.in(roomId).emit(ACTIONS.CODE_CHANGE, { code });
     });
 
     socket.on(ACTIONS.SYNC_CODE, ({ socketId, code }) => {
+        if(!socketId) {
+            console.error('Invalid SYNC_CODE request: missing socketId');
+            return;
+        }
         io.to(socketId).emit(ACTIONS.CODE_CHANGE, { code });
     });
 

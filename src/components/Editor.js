@@ -20,16 +20,21 @@ const Editor = ({socketRef, roomId, onCodeChange}) => {
 
   useEffect(() => {
     async function init() {
-       editorRef.current = Codemirror.fromTextArea(document.getElementById('realtimeEditor'), {
-            mode: { name: 'javascript', json: true },
+      const textarea = document.getElementById('realtimeEditor');
+      if(!textarea) {
+        console.error('Textarea element not found');
+        return;
+      }
 
-            theme: 'dracula',
-            autoCloseTags: true,
-            autoCloseBrackets: true,
-            lineNumbers: true,
-            styleActiveLine: true,
-            styleActiveSelected: true,
-        });
+      editorRef.current = Codemirror.fromTextArea(textarea, {
+        mode: { name: 'javascript', json: true },
+        theme: 'dracula',
+        autoCloseTags: true,
+        autoCloseBrackets: true,
+        lineNumbers: true,
+        styleActiveLine: true,
+        styleActiveSelected: true,
+      });
         
         editorRef.current.on('change', (instance, changes) => {
           // console.log('changes',changes);
@@ -37,12 +42,10 @@ const Editor = ({socketRef, roomId, onCodeChange}) => {
           const code = instance.getValue();
           onCodeChange(code);
           
-          if(origin !== 'setValue') {
-            
+          if(origin !== 'setValue' && socketRef.current && socketRef.current.connected) {
             socketRef.current.emit(ACTIONS.CODE_CHANGE, {
               roomId,
               code,
-
             } );
           }
           // console.log(code);
@@ -55,21 +58,41 @@ const Editor = ({socketRef, roomId, onCodeChange}) => {
   }, []);
 
   useEffect(() => {
-    if(socketRef.current) {
+    if(!socketRef.current) return;
 
-      socketRef.current.on(ACTIONS.CODE_CHANGE, ({code}) => {
-        // console.log('rece', code);
-        if(code !== null) {
-          editorRef.current.setValue(code);
-        }
-      });
+    const handleCodeChange = ({code}) => {
+      // console.log('rece', code);
+      if(code != null && editorRef.current) {
+        editorRef.current.setValue(code);
+      }
+    };
+
+    // Wait for socket to be connected before setting up listener
+    const setupListener = () => {
+      if(socketRef.current && socketRef.current.connected) {
+        socketRef.current.on(ACTIONS.CODE_CHANGE, handleCodeChange);
+        return true;
+      }
+      return false;
+    };
+
+    // Try to set up immediately
+    if(!setupListener()) {
+      // If not connected yet, wait for connection
+      const onConnect = () => {
+        setupListener();
+        socketRef.current.off('connect', onConnect);
+      };
+      socketRef.current.on('connect', onConnect);
     }
 
     return () => {
-      socketRef.current.off(ACTIONS.CODE_CHANGE);
+      if(socketRef.current) {
+        socketRef.current.off(ACTIONS.CODE_CHANGE, handleCodeChange);
+        socketRef.current.off('connect');
+      }
     };
-
-  },[socketRef.current])
+  }, [socketRef])
 
   return <textarea id='realtimeEditor'></textarea>
 };

@@ -43,17 +43,22 @@ const EditorPage = () => {
       //listening for joined event
       socketRef.current.on(
         ACTIONS.JOINED, 
-        ({clients, username,socketId}) => {
+        ({clients, username, socketId}) => {
           if(username !== location.state?.username) {
             toast.success(`${username} joined the room.`)
             console.log (`${username} joined.`);
           }
 
           setClients(clients);
-          socketRef.current.emit(ACTIONS.SYNC_CODE, {
-           code: codeRef.current,
-           socketId,
-          });
+          
+          // Only sync code if this is a new user joining (not the current user)
+          // and we have code to sync
+          if(socketId !== socketRef.current.id && codeRef.current != null) {
+            socketRef.current.emit(ACTIONS.SYNC_CODE, {
+              code: codeRef.current,
+              socketId,
+            });
+          }
 
       } );
 
@@ -75,10 +80,13 @@ const EditorPage = () => {
     init();
 
     return () => {
-      socketRef.current.disconnect();
-      socketRef.current.off(ACTIONS.JOINED);
-      socketRef.current.off(ACTIONS.DISCONNECTED);
-
+      if(socketRef.current) {
+        socketRef.current.off(ACTIONS.JOINED);
+        socketRef.current.off(ACTIONS.DISCONNECTED);
+        socketRef.current.off("connect_error");
+        socketRef.current.off("connect_failed");
+        socketRef.current.disconnect();
+      }
     }
 
   }, []);
