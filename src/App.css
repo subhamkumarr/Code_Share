@@ -150,12 +150,124 @@ font-weight: bold;
   background: #2b824c;
 }
 
+.editorWrap {
+  display: flex;
+  flex-direction: column;
+  background: #282a36;
+}
+
 .CodeMirror {
-  min-height: calc(100vh - 20px);
+  min-height: calc(100vh - 400px);
   font-size: 20px;
   line-height: 1.6;
   padding-top: 20px;
+  flex: 1;
+}
 
+/* Compiler Styles */
+.compilerContainer {
+  background: #282a36;
+  border-top: 2px solid #44475a;
+  padding: 15px;
+  max-height: 350px;
+  display: flex;
+  flex-direction: column;
+}
+
+.compilerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.languageSelect {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid #44475a;
+  background: #1c1e29;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+  min-width: 120px;
+}
+
+.runBtn {
+  background: #4aee88;
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: none;
+  color: #1c1e29;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.runBtn:hover:not(:disabled) {
+  background: #2b824c;
+}
+
+.runBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.compilerBody {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  flex: 1;
+}
+
+.inputSection,
+.outputSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.inputSection label,
+.outputSection label {
+  color: #8be9fd;
+  font-weight: bold;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.compilerInput {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #44475a;
+  border-radius: 4px;
+  background: #1c1e29;
+  color: #fff;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  resize: none;
+  outline: none;
+  min-height: 100px;
+}
+
+.compilerInput:focus {
+  border-color: #4aee88;
+}
+
+.compilerOutput {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #44475a;
+  border-radius: 4px;
+  background: #1c1e29;
+  color: #fff;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-y: auto;
+  min-height: 100px;
+  margin: 0;
+  line-height: 1.5;
 }
 
 /* Chat Styles */

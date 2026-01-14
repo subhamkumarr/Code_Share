@@ -8,13 +8,111 @@ const ACTIONS = require('./src/Actions');
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: process.env.NODE_ENV === 'production' 
-            ? process.env.FRONTEND_URL || '*' 
+        origin: process.env.NODE_ENV === 'production'
+            ? process.env.FRONTEND_URL || '*'
             : 'http://localhost:3000',
         methods: ['GET', 'POST'],
         credentials: true
     },
     allowEIO3: true
+});
+
+// Parse JSON bodies for API routes
+app.use(express.json());
+
+// Enable CORS for API routes
+app.use((req, res, next) => {
+    const origin = process.env.NODE_ENV === 'production'
+        ? process.env.FRONTEND_URL
+        : 'http://localhost:3000';
+
+    res.header('Access-Control-Allow-Origin', origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
+// Code execution endpoint
+app.post('/api/execute', async (req, res) => {
+    const { code, language, stdin } = req.body;
+
+    if (!code || !language) {
+        return res.status(400).json({ error: 'Code and language are required' });
+    }
+
+    // Local C++ Execution
+    if (language === 'cpp' || language === 'c++') {
+        const fs = require('fs');
+        const { exec } = require('child_process');
+        const path = require('path');
+        const os = require('os');
+
+        // Use a temp directory for safe file handling
+        const tempDir = os.tmpdir();
+        const jobId = require('uuid').v4(); // Generate unique ID for this run
+        const sourceFile = path.join(tempDir, `${jobId}.cpp`);
+        const outputFile = path.join(tempDir, `${jobId}.exe`); // Windows exe
+
+        try {
+            // 1. Write code to file
+            await fs.promises.writeFile(sourceFile, code);
+
+            // 2. Compile
+            // g++ source -o output
+            exec(`g++ "${sourceFile}" -o "${outputFile}"`, (compileError, stdout, stderr) => {
+                if (compileError) {
+                    // Cleanup source
+                    fs.unlink(sourceFile, () => { });
+                    return res.json({
+                        stdout: '',
+                        stderr: stderr || compileError.message,
+                        exitCode: 1
+                    });
+                }
+
+                // 3. Execute
+                // Verify output file exists
+                if (!fs.existsSync(outputFile)) {
+                    return res.status(500).json({ error: 'Compilation failed to generate executable' });
+                }
+
+                // Run the executable
+                const child = exec(`"${outputFile}"`, { timeout: 5000 }, (runError, runStdout, runStderr) => {
+                    // Cleanup
+                    fs.unlink(sourceFile, () => { });
+                    fs.unlink(outputFile, () => { });
+
+                    if (runError && runError.killed) {
+                        return res.json({ stdout: '', stderr: 'Execution timed out', exitCode: 124 });
+                    }
+
+                    res.json({
+                        stdout: runStdout,
+                        stderr: runStderr || (runError ? runError.message : ''),
+                        exitCode: runError ? (runError.code || 1) : 0
+                    });
+                });
+
+                // Handle stdin
+                if (stdin) {
+                    child.stdin.write(stdin);
+                    child.stdin.end();
+                }
+            });
+        } catch (err) {
+            console.error('Local execution error:', err);
+            res.status(500).json({ error: 'Internal server error during execution' });
+        }
+        return;
+    }
+
+    // Fallback to Piston for other languages (if any added later) or return error
+    res.status(400).json({ error: 'Only JavaScript (client-side) and C++ (server-side) are currently supported.' });
 });
 
 // Serve static files from build directory

@@ -4,6 +4,7 @@ import Client from "../components/Client";
 import ACTIONS from "../Actions";
 import Editor from "../components/Editor";
 import Chat from "../components/Chat";
+import Compiler from "../components/Compiler";
 import { initSocket } from "../socket";
 
 import {
@@ -24,6 +25,7 @@ const EditorPage = () => {
 
   const [clients, setClients] = useState([]);
   const [socketInitialized, setSocketInitialized] = useState(false);
+  const [currentCode, setCurrentCode] = useState('');
 
 
   useEffect(() => {
@@ -157,7 +159,14 @@ const EditorPage = () => {
           roomId={roomId}
           onCodeChange={(code) => {
             codeRef.current = code;
+            setCurrentCode(code);
           }}
+        />
+        <Compiler
+          socketRef={socketRef}
+          roomId={roomId}
+          code={currentCode}
+          language="javascript"
         />
       </div>
       <Chat

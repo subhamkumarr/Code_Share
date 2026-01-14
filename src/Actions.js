@@ -10,6 +10,7 @@ const ACTIONS = {
     SYNC_CHAT: 'sync-chat',
     TYPING_START: 'typing-start',
     TYPING_STOP: 'typing-stop',
+    EXECUTION_RESULT: 'execution-result',
 };
 
 module.exports = ACTIONS;
