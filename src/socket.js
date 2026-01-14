@@ -5,7 +5,9 @@ export const initSocket = async () => {
         'force new connection': true,
         reconnectionAttempt: 'Infinity',
         timeout: 10000,
-        transports: ['websocket'],
+        reconnectionAttempt: 'Infinity',
+        timeout: 10000,
+        transports: ['websocket', 'polling'],
     };
 
     // Simplify connection logic:
