@@ -132,12 +132,18 @@ const EditorPage = () => {
     reactNavigator('/');
   }
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
   if (!location.state) {
     return <Navigate to="/" />;
   }
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
-    <div className="mainWrap">
+    <div className={`mainWrap ${!isSidebarOpen ? 'sidebar-collapsed' : ''}`}>
       <div className="aside">
         <div className="asideInner">
           <div className="logo">
@@ -150,9 +156,16 @@ const EditorPage = () => {
             ))}
           </div>
         </div>
-        <button className="btn copyBtn" onClick={copyRoomId}> Copy ROOM ID</button>
-        <button className="btn leaveBtn" onClick={leaveRoom}> Leave</button>
+        <div className="asideFooter">
+          <button className="btn copyBtn" onClick={copyRoomId}>Copy Room ID</button>
+          <button className="btn leaveBtn" onClick={leaveRoom}>Leave</button>
+        </div>
       </div>
+
+      {/* Sidebar Toggle Button (Visible when collapsed or expanded, positioned absolutely or fixed) */}
+      <button className="sidebarToggleBtn" onClick={toggleSidebar}>
+        {isSidebarOpen ? '◀' : '▶'}
+      </button>
       <div className="editorWrap">
         <Editor
           socketRef={socketRef}

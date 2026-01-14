@@ -90,7 +90,7 @@ footer a {
   border-bottom: 1px solid #4aee88;
 }
 
-footer a:hover{
+footer a:hover {
   color: #2b824c;
   border-color: #2b824c;
 }
@@ -99,7 +99,16 @@ footer a:hover{
 .mainWrap {
   display: grid;
   grid-template-columns: 230px 1fr;
-  /* height: 100vh; */
+  height: 100vh;
+  /* Fix height to viewport */
+  overflow: hidden;
+  /* Prevent body scroll driven by this container */
+  transition: grid-template-columns 0.3s ease-in-out;
+  position: relative;
+}
+
+.mainWrap.sidebar-collapsed {
+  grid-template-columns: 0px 1fr;
 }
 
 .aside {
@@ -108,24 +117,50 @@ footer a:hover{
   color: #fff;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  /* Take full height of grid cell */
+  overflow: hidden;
+  /* Hide overflow when collapsed */
+  white-space: nowrap;
+  /* Prevent text wrap during collapse */
+  transition: all 0.3s ease-in-out;
 }
 
-.asideInner{
+.asideInner {
   flex: 1;
+  overflow-y: auto;
+  /* Allow scrolling for client list if it gets too long */
+  min-height: 0;
+  /* Important for flex child scrolling */
+  display: flex;
+  flex-direction: column;
+}
+
+.asideFooter {
+  margin-top: auto;
+  /* Push to bottom */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 10px;
 }
 
 .clientsList {
-display: flex;
-align-items: center;
-flex-wrap: wrap;
-gap: 20px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  /* Only wrap if width allows, but we might want column list properly? */
+  gap: 20px;
+  /* For better list view in sidebar */
+  flex-direction: row;
+  align-content: flex-start;
 }
 
 .client {
   display: flex;
-align-items: center;
-flex-direction: column;
-font-weight: bold;
+  align-items: center;
+  flex-direction: column;
+  font-weight: bold;
 }
 
 .userName {
@@ -141,8 +176,14 @@ font-weight: bold;
   height: 60px;
 }
 
+.leaveBtn,
+.copyBtn {
+  width: 100%;
+  margin-top: 0;
+  /* Handled by gap in asideFooter */
+}
+
 .leaveBtn {
-  margin-top: 20px;
   background: #4aee88;
 }
 
@@ -150,18 +191,60 @@ font-weight: bold;
   background: #2b824c;
 }
 
+/* Sidebar Toggle Button */
+.sidebarToggleBtn {
+  position: absolute;
+  left: 230px;
+  /* Initially at sidebar edge */
+  top: 20px;
+  background: #282a36;
+  border: 1px solid #44475a;
+  border-left: none;
+  color: #f8f8f2;
+  border-radius: 0 5px 5px 0;
+  padding: 10px 5px;
+  cursor: pointer;
+  z-index: 100;
+  transition: left 0.3s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+}
+
+.mainWrap.sidebar-collapsed .sidebarToggleBtn {
+  left: 0;
+  background: #44475a;
+}
+
 .editorWrap {
   display: flex;
   flex-direction: column;
   background: #282a36;
+  height: 100%;
+  /* Fill the grid cell height */
+  overflow: hidden;
+  /* Prevent overflow out of grid cell */
 }
 
 .CodeMirror {
-  min-height: calc(100vh - 400px);
+  height: 100%;
+  /* Take available height */
   font-size: 20px;
   line-height: 1.6;
   padding-top: 20px;
   flex: 1;
+  /* Grow to fill space */
+  overflow: hidden;
+  /* Let CodeMirror handle its own scroll */
+}
+
+/* Ensure CodeMirror's internal scroll container works */
+.CodeMirror-scroll {
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+  height: 100% !important;
+  min-height: 100% !important;
 }
 
 /* Compiler Styles */
@@ -413,6 +496,7 @@ font-weight: bold;
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -535,9 +619,17 @@ font-weight: bold;
 }
 
 @keyframes pulse {
-  0% { opacity: 0.5; }
-  50% { opacity: 1; }
-  100% { opacity: 0.5; }
+  0% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.5;
+  }
 }
 
 /* Markdown Code Styles */
