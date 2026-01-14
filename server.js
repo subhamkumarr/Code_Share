@@ -6,7 +6,16 @@ const { Server } = require('socket.io');
 const ACTIONS = require('./src/Actions');
 
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+    cors: {
+        origin: process.env.NODE_ENV === 'production' 
+            ? process.env.FRONTEND_URL || '*' 
+            : 'http://localhost:3000',
+        methods: ['GET', 'POST'],
+        credentials: true
+    },
+    allowEIO3: true
+});
 
 // Serve static files from build directory
 app.use(express.static(__dirname + '/build/'));

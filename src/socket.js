@@ -2,19 +2,22 @@ import { io } from 'socket.io-client';
 
 export const initSocket = async () => {
     const options = {
-        'force new connection': true,
-        reconnectionAttempt: 'Infinity',
-        timeout: 10000,
-        reconnectionAttempt: 'Infinity',
+        forceNew: true,
+        reconnection: true,
+        reconnectionAttempts: Infinity,
         timeout: 10000,
         transports: ['websocket', 'polling'],
     };
 
-    // Simplify connection logic:
-    // If on localhost, assume backend is on port 5000.
-    // Otherwise, assume backend is relative (same origin).
-    const isLocalhost = window.location.hostname === 'localhost';
-    const socketUrl = isLocalhost ? 'http://localhost:5000' : window.location.origin;
+    // Connection logic (supports Render "Static Site + Web Service" deployments):
+    // - Prefer explicit env var (CRA exposes REACT_APP_* at build time)
+    // - Local dev default: http://localhost:5000
+    // - Otherwise: same-origin (single-service deployment)
+    const envUrl =
+        (process.env.REACT_APP_SOCKET_URL || process.env.REACT_APP_BACKEND_URL || '').trim();
+    const isLocalhost =
+        window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const socketUrl = envUrl || (isLocalhost ? 'http://localhost:5000' : window.location.origin);
 
     console.log('Detected hostname:', window.location.hostname);
     console.log('Connecting to socket:', socketUrl);
@@ -22,25 +25,27 @@ export const initSocket = async () => {
 
     return new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
+            socket.removeAllListeners();
             reject(new Error('Socket connection timeout'));
-        }, 10000);
+        }, 15000); // Increased timeout for Render cold starts
 
         socket.on('connect', () => {
             console.log('Socket connected:', socket.id);
             clearTimeout(timeout);
+            socket.off('connect_error'); // Remove error listener on success
             resolve(socket);
         });
 
         socket.on('connect_error', (error) => {
             console.error('Socket connection error:', error);
-            clearTimeout(timeout);
-            // Still resolve the socket so the app can try to reconnect
-            resolve(socket);
+            // Socket.IO will retry automatically, so we wait for connect or timeout
+            // Don't reject immediately - allow retries
         });
 
         // If already connected, resolve immediately
         if (socket.connected) {
             clearTimeout(timeout);
+            socket.off('connect_error');
             resolve(socket);
         }
     });

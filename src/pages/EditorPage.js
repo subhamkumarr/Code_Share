@@ -17,6 +17,7 @@ const EditorPage = () => {
 
   const socketRef = useRef(null);
   const codeRef = useRef(null);
+  const hasShownSocketErrorRef = useRef(false);
   const location = useLocation();
   const { roomId } = useParams();
   const reactNavigator = useNavigate();
@@ -36,8 +37,12 @@ const EditorPage = () => {
 
         function handleErrors(e) {
           console.log("socket error", e);
-          toast.error("Socket connection failed, try again later.");
-          reactNavigator("/");
+          // Render (and other hosts) can briefly fail during cold starts or retries.
+          // Show a single toast but let socket.io keep reconnecting.
+          if (!hasShownSocketErrorRef.current) {
+            hasShownSocketErrorRef.current = true;
+            toast.error("Socket connection failed, trying to reconnect…");
+          }
         }
 
         // Always rejoin room on connection (handling reconnects)
@@ -95,8 +100,7 @@ const EditorPage = () => {
         );
       } catch (error) {
         console.error('Socket initialization error:', error);
-        toast.error("Failed to initialize socket connection.");
-        reactNavigator("/");
+        toast.error("Failed to initialize socket connection. Please refresh and try again.");
       }
     };
     init();
