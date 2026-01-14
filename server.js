@@ -256,6 +256,17 @@ io.on('connection', (socket) => {
     socket.on(ACTIONS.TYPING_STOP, ({ roomId, username }) => {
         socket.in(roomId).emit(ACTIONS.TYPING_STOP, { username });
     });
+
+    socket.on(ACTIONS.EXECUTION_RESULT, ({ roomId, output, language }) => {
+        socket.in(roomId).emit(ACTIONS.EXECUTION_RESULT, {
+            output,
+            language
+        });
+    });
+
+    socket.on(ACTIONS.SYNC_INPUT, ({ roomId, input }) => {
+        socket.in(roomId).emit(ACTIONS.SYNC_INPUT, { input });
+    });
 });
 
 const PORT = process.env.PORT || 5000;

@@ -167,19 +167,38 @@ const Compiler = ({ socketRef, roomId, code, language = 'javascript' }) => {
     if (!socketRef.current) return;
 
     const handleExecutionResult = ({ output, language }) => {
-      if (language === selectedLanguage) {
-        setOutput(output);
+      // Sync language so the user knows what was run
+      if (language) {
+        setSelectedLanguage(language);
       }
+      setOutput(output);
+    };
+
+    const handleInputSync = ({ input }) => {
+      setInput(input);
     };
 
     socketRef.current.on(ACTIONS.EXECUTION_RESULT, handleExecutionResult);
+    socketRef.current.on(ACTIONS.SYNC_INPUT, handleInputSync);
 
     return () => {
       if (socketRef.current) {
         socketRef.current.off(ACTIONS.EXECUTION_RESULT, handleExecutionResult);
+        socketRef.current.off(ACTIONS.SYNC_INPUT, handleInputSync);
       }
     };
   }, [socketRef.current, selectedLanguage, roomId]);
+
+  const handleInputChange = (e) => {
+    const newInput = e.target.value;
+    setInput(newInput);
+    if (socketRef.current && socketRef.current.connected) {
+      socketRef.current.emit(ACTIONS.SYNC_INPUT, {
+        roomId,
+        input: newInput,
+      });
+    }
+  };
 
   return (
     <div className="compilerContainer">
@@ -206,7 +225,7 @@ const Compiler = ({ socketRef, roomId, code, language = 'javascript' }) => {
           <label>Input:</label>
           <textarea
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             placeholder="Enter input here..."
             className="compilerInput"
           />

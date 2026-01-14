@@ -11,6 +11,7 @@ const ACTIONS = {
     TYPING_START: 'typing-start',
     TYPING_STOP: 'typing-stop',
     EXECUTION_RESULT: 'execution-result',
+    SYNC_INPUT: 'sync-input',
 };
 
 module.exports = ACTIONS;
