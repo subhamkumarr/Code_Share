@@ -1,9 +1,9 @@
-import React, {useEffect, useRef} from 'react'
+import React, { useEffect, useRef } from 'react'
 
 import Codemirror from 'codemirror';
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/theme/dracula.css';
- import 'codemirror/mode/javascript/javascript';
+import 'codemirror/mode/javascript/javascript';
 //  import 'codemirror/mode/python/python';
 // import 'codemirror/addon/search/match-highlighter';
 import 'codemirror/addon/edit/closetag';
@@ -13,7 +13,7 @@ import ACTIONS from '../Actions';
 
 
 
-const Editor = ({socketRef, roomId, onCodeChange}) => {
+const Editor = ({ socketRef, roomId, onCodeChange }) => {
 
   const editorRef = useRef(null);
 
@@ -21,7 +21,7 @@ const Editor = ({socketRef, roomId, onCodeChange}) => {
   useEffect(() => {
     async function init() {
       const textarea = document.getElementById('realtimeEditor');
-      if(!textarea) {
+      if (!textarea) {
         console.error('Textarea element not found');
         return;
       }
@@ -35,64 +35,69 @@ const Editor = ({socketRef, roomId, onCodeChange}) => {
         styleActiveLine: true,
         styleActiveSelected: true,
       });
-        
-        editorRef.current.on('change', (instance, changes) => {
-          // console.log('changes',changes);
-          const {origin} = changes;
-          const code = instance.getValue();
-          onCodeChange(code);
-          
-          if(origin !== 'setValue' && socketRef.current && socketRef.current.connected) {
+
+      editorRef.current.on('change', (instance, changes) => {
+        const { origin } = changes;
+        const code = instance.getValue();
+        onCodeChange(code);
+
+        if (origin !== 'setValue' && socketRef.current) {
+          if (socketRef.current.connected) {
             socketRef.current.emit(ACTIONS.CODE_CHANGE, {
               roomId,
               code,
-            } );
+            });
+          } else {
+            // Wait for connection if not connected
+            socketRef.current.once('connect', () => {
+              socketRef.current.emit(ACTIONS.CODE_CHANGE, {
+                roomId,
+                code,
+              });
+            });
           }
-          // console.log(code);
-        
-        });
-        // editorRef.current.setValue(`console.log('hello')`);
-        
+        }
+      });
+      // editorRef.current.setValue(`console.log('hello')`);
+
     }
     init();
   }, []);
 
   useEffect(() => {
-    if(!socketRef.current) return;
+    if (!socketRef.current) return;
 
-    const handleCodeChange = ({code}) => {
-      // console.log('rece', code);
-      if(code != null && editorRef.current) {
+    const handleCodeChange = ({ code }) => {
+      if (code != null && editorRef.current) {
         editorRef.current.setValue(code);
       }
     };
 
-    // Wait for socket to be connected before setting up listener
+    // Set up listener when socket is available
     const setupListener = () => {
-      if(socketRef.current && socketRef.current.connected) {
+      if (socketRef.current) {
         socketRef.current.on(ACTIONS.CODE_CHANGE, handleCodeChange);
-        return true;
       }
-      return false;
     };
 
-    // Try to set up immediately
-    if(!setupListener()) {
-      // If not connected yet, wait for connection
+    // Set up listener immediately if socket exists
+    setupListener();
+
+    // Also listen for connect event in case socket connects later
+    if (socketRef.current) {
       const onConnect = () => {
         setupListener();
-        socketRef.current.off('connect', onConnect);
       };
       socketRef.current.on('connect', onConnect);
     }
 
     return () => {
-      if(socketRef.current) {
+      if (socketRef.current) {
         socketRef.current.off(ACTIONS.CODE_CHANGE, handleCodeChange);
         socketRef.current.off('connect');
       }
     };
-  }, [socketRef])
+  }, [socketRef.current])
 
   return <textarea id='realtimeEditor'></textarea>
 };
