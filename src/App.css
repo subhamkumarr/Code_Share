@@ -636,9 +636,116 @@ footer a:hover {
 .messageText code {
   background: #282a36;
   padding: 2px 4px;
-  border-radius: 4px;
   font-family: 'Fira Code', monospace;
   color: #ff79c6;
   font-size: 0.9em;
   border: 1px solid #44475a;
+}
+
+/* File Explorer Styles */
+.fileExplorer {
+  padding: 10px;
+  border-bottom: 1px solid #44475a;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  /* Take simplified space in sidebar */
+  overflow: hidden;
+}
+
+.explorerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.explorerHeader h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #fff;
+}
+
+.newFileBtn {
+  background: #4aee88;
+  border: none;
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #1c1e29;
+  font-weight: bold;
+}
+
+.newFileForm input {
+  width: 100%;
+  padding: 6px;
+  background: #282a36;
+  border: 1px solid #44475a;
+  color: #fff;
+  border-radius: 4px;
+  outline: none;
+}
+
+.fileList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s;
+  color: #bd93f9;
+  /* Dracula Purple for files */
+}
+
+.fileItem:hover {
+  background: #44475a;
+}
+
+.fileItem.active {
+  background: #44475a;
+  color: #fff;
+  font-weight: bold;
+  border-left: 3px solid #4aee88;
+}
+
+.fileIcon {
+  font-size: 14px;
+}
+
+.fileName {
+  font-size: 14px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deleteFileBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+  font-size: 12px;
+}
+
+.fileItem:hover .deleteFileBtn {
+  opacity: 1;
+}
+
+.deleteFileBtn:hover {
+  transform: scale(1.1);
 }

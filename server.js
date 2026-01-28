@@ -8,9 +8,20 @@ const ACTIONS = require('./src/Actions');
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: process.env.NODE_ENV === 'production'
-            ? process.env.FRONTEND_URL || '*'
-            : 'http://localhost:3000',
+        origin: (origin, callback) => {
+            // Allow all localhost origins for development
+            const allowedOrigins = [
+                'http://localhost:3000',
+                'http://localhost:3001',
+                'http://localhost:3002',
+                process.env.FRONTEND_URL
+            ];
+            if (!origin || allowedOrigins.includes(origin) || origin.startsWith('http://localhost:')) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
         methods: ['GET', 'POST'],
         credentials: true
     },
@@ -125,6 +136,8 @@ app.get('*', (req, res) => {
 
 const userSocketMap = {};
 const roomMessagesMap = {}; // Helper to store messages per room
+const roomFilesMap = {}; // Helper to store files per room
+
 function getAllConnectedClients(roomId) {
     // Map
     return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map(
@@ -161,11 +174,24 @@ io.on('connection', (socket) => {
             });
         });
 
-        // Send existing messages to the joined user
+        // Send existing messages and files to the joined user
         const messages = roomMessagesMap[roomId] || [];
-        io.to(socket.id).emit(ACTIONS.SYNC_CHAT, {
-            messages,
-        });
+        const files = roomFilesMap[roomId] || [];
+
+        // Initialize default file if room is empty
+        if (files.length === 0) {
+            files.push({
+                id: 'main-js',
+                name: 'main.js',
+                type: 'file',
+                content: '// Write your code here',
+                parentId: null
+            });
+            roomFilesMap[roomId] = files;
+        }
+
+        io.to(socket.id).emit(ACTIONS.SYNC_CHAT, { messages });
+        io.to(socket.id).emit(ACTIONS.SYNC_FILES, { files });
     });
 
     socket.on(ACTIONS.CODE_CHANGE, ({ roomId, code }) => {
@@ -264,10 +290,55 @@ io.on('connection', (socket) => {
         });
     });
 
+    // WebRTC Signaling
+    // When a user sends a signal (offer/answer/ice), relay it to the specific target
+    socket.on(ACTIONS.SIGNAL_CODE, ({ signal, to, from }) => {
+        io.to(to).emit(ACTIONS.SIGNAL_CODE, { signal, from });
+    });
+
+    // Whiteboard signaling
+    socket.on(ACTIONS.DRAWING_UPDATE, ({ roomId, changes }) => {
+        // console.log(`Drawing update in room ${roomId}`); 
+        socket.in(roomId).emit(ACTIONS.DRAWING_UPDATE, { changes });
+    });
+
     socket.on(ACTIONS.SYNC_INPUT, ({ roomId, input }) => {
         socket.in(roomId).emit(ACTIONS.SYNC_INPUT, { input });
     });
+
+    // File System Operations
+    socket.on(ACTIONS.FILE_CREATED, ({ roomId, file }) => {
+        // file: { id, name, type, content, parentId }
+        if (!roomFilesMap[roomId]) roomFilesMap[roomId] = [];
+        roomFilesMap[roomId].push(file);
+        socket.in(roomId).emit(ACTIONS.FILE_CREATED, { file });
+    });
+
+    socket.on(ACTIONS.FILE_UPDATED, ({ roomId, fileId, content }) => {
+        if (!roomFilesMap[roomId]) return;
+        const file = roomFilesMap[roomId].find(f => f.id === fileId);
+        if (file) {
+            file.content = content;
+            socket.in(roomId).emit(ACTIONS.FILE_UPDATED, { fileId, content });
+        }
+    });
+
+    socket.on(ACTIONS.FILE_RENAMED, ({ roomId, fileId, newName }) => {
+        if (!roomFilesMap[roomId]) return;
+        const file = roomFilesMap[roomId].find(f => f.id === fileId);
+        if (file) {
+            file.name = newName;
+            socket.in(roomId).emit(ACTIONS.FILE_RENAMED, { fileId, newName });
+        }
+    });
+
+    socket.on(ACTIONS.FILE_DELETED, ({ roomId, fileId }) => {
+        if (!roomFilesMap[roomId]) return;
+        roomFilesMap[roomId] = roomFilesMap[roomId].filter(f => f.id !== fileId);
+        socket.in(roomId).emit(ACTIONS.FILE_DELETED, { fileId });
+    });
 });
+
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Listening on port ${PORT}`));

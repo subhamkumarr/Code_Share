@@ -13,7 +13,7 @@ import ACTIONS from '../Actions';
 
 
 
-const Editor = ({ socketRef, roomId, onCodeChange }) => {
+const Editor = ({ socketRef, roomId, onCodeChange, code }) => {
 
   const editorRef = useRef(null);
 
@@ -40,64 +40,22 @@ const Editor = ({ socketRef, roomId, onCodeChange }) => {
         const { origin } = changes;
         const code = instance.getValue();
         onCodeChange(code);
-
-        if (origin !== 'setValue' && socketRef.current) {
-          if (socketRef.current.connected) {
-            socketRef.current.emit(ACTIONS.CODE_CHANGE, {
-              roomId,
-              code,
-            });
-          } else {
-            // Wait for connection if not connected
-            socketRef.current.once('connect', () => {
-              socketRef.current.emit(ACTIONS.CODE_CHANGE, {
-                roomId,
-                code,
-              });
-            });
-          }
-        }
       });
-      // editorRef.current.setValue(`console.log('hello')`);
-
     }
     init();
   }, []);
 
   useEffect(() => {
-    if (!socketRef.current) return;
-
-    const handleCodeChange = ({ code }) => {
-      if (code != null && editorRef.current) {
+    if (editorRef.current) {
+      // Only update if the new code is different to prevent cursor jumping or loops
+      // But CodeMirror `setValue` might reset cursor.
+      // Better to check value.
+      const currentVal = editorRef.current.getValue();
+      if (code !== currentVal) {
         editorRef.current.setValue(code);
       }
-    };
-
-    // Set up listener when socket is available
-    const setupListener = () => {
-      if (socketRef.current) {
-        socketRef.current.on(ACTIONS.CODE_CHANGE, handleCodeChange);
-      }
-    };
-
-    // Set up listener immediately if socket exists
-    setupListener();
-
-    // Also listen for connect event in case socket connects later
-    if (socketRef.current) {
-      const onConnect = () => {
-        setupListener();
-      };
-      socketRef.current.on('connect', onConnect);
     }
-
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.off(ACTIONS.CODE_CHANGE, handleCodeChange);
-        socketRef.current.off('connect');
-      }
-    };
-  }, [socketRef.current])
+  }, [code]);
 
   return <textarea id='realtimeEditor'></textarea>
 };
