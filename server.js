@@ -126,6 +126,55 @@ app.post('/api/execute', async (req, res) => {
     res.status(400).json({ error: 'Only JavaScript (client-side) and C++ (server-side) are currently supported.' });
 });
 
+app.post('/api/problem', async (req, res) => {
+    const { slug } = req.body;
+    if (!slug) return res.status(400).json({ error: 'Slug is required' });
+
+    try {
+        const response = await fetch('https://leetcode.com/graphql', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Referer': 'https://leetcode.com'
+            },
+            body: JSON.stringify({
+                query: `
+                    query getQuestionDetail($titleSlug: String!) {
+                        question(titleSlug: $titleSlug) {
+                            questionId
+                            title
+                            content
+                            difficulty
+                        }
+                    }
+                `,
+                variables: { titleSlug: slug }
+            })
+        });
+
+
+
+        const data = await response.json();
+
+        // Console log for debugging
+        if (data.errors) {
+            console.error('LeetCode API returned errors:', data.errors);
+            return res.status(400).json({ error: 'Problem not found or LeetCode API error', details: data.errors });
+        }
+
+        if (!data.data || !data.data.question) {
+            console.error('LeetCode API returned no data:', data);
+            return res.status(404).json({ error: 'Problem content not found. Check the name spelling.' });
+        }
+
+        res.json(data.data.question);
+    } catch (err) {
+        console.error('LeetCode API Network Error:', err);
+        res.status(500).json({ error: 'Internal server error while fetching problem.' });
+    }
+});
+
 // Serve static files from build directory
 app.use(express.static(__dirname + '/build/'));
 
@@ -300,6 +349,10 @@ io.on('connection', (socket) => {
     socket.on(ACTIONS.DRAWING_UPDATE, ({ roomId, changes }) => {
         // console.log(`Drawing update in room ${roomId}`); 
         socket.in(roomId).emit(ACTIONS.DRAWING_UPDATE, { changes });
+    });
+
+    socket.on(ACTIONS.QUESTION_CHANGE, ({ roomId, question }) => {
+        socket.in(roomId).emit(ACTIONS.QUESTION_CHANGE, { question });
     });
 
     socket.on(ACTIONS.SYNC_INPUT, ({ roomId, input }) => {

@@ -6,6 +6,7 @@ import Editor from "../components/Editor";
 import Chat from "../components/Chat";
 import Compiler from "../components/Compiler";
 import Board from "../components/Board";
+import Question from "../components/Question";
 import { initSocket } from "../socket";
 import {
   useLocation,
@@ -204,6 +205,20 @@ const EditorPage = () => {
           >
             Whiteboard
           </button>
+          <button
+            onClick={() => setActiveTab('question')}
+            style={{
+              padding: '10px 20px',
+              background: activeTab === 'question' ? '#282a36' : 'transparent',
+              color: activeTab === 'question' ? '#4aee88' : '#fff',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              borderTop: activeTab === 'question' ? '2px solid #4aee88' : '2px solid transparent'
+            }}
+          >
+            Question
+          </button>
         </div>
 
         {/* Use Visibility/Z-Index to keep state alive and avoid remounting/resizing issues */}
@@ -250,6 +265,21 @@ const EditorPage = () => {
             opacity: activeTab === 'board' ? 1 : 0
           }}>
             <Board socket={socketRef.current} roomId={roomId} />
+          </div>
+
+          {/* Question Container */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            visibility: activeTab === 'question' ? 'visible' : 'hidden',
+            zIndex: activeTab === 'question' ? 10 : 0,
+            opacity: activeTab === 'question' ? 1 : 0,
+            backgroundColor: '#1c1e29'
+          }}>
+            <Question socket={socketRef.current} roomId={roomId} />
           </div>
         </div>
       </div>

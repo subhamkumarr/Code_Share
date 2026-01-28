@@ -22,6 +22,7 @@ const ACTIONS = {
     FILE_UPDATED: 'file-updated',
     FILE_RENAMED: 'file-renamed',
     FILE_DELETED: 'file-deleted',
+    QUESTION_CHANGE: 'question-change',
 };
 
 module.exports = ACTIONS;
