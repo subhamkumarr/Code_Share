@@ -17,17 +17,32 @@ const io = new Server(server, {
                 process.env.FRONTEND_URL
             ].filter(Boolean); // Remove undefined values
             
-            // In production, if FRONTEND_URL is set, use it; otherwise allow same-origin
-            // (for single-service deployments where backend serves frontend)
             const isProduction = process.env.NODE_ENV === 'production';
             const isSameOrigin = !origin; // Socket.IO may not send origin for same-origin
+            const isLocalhost = origin && origin.startsWith('http://localhost:');
+            const isRenderOrigin = origin && (origin.includes('.onrender.com') || origin.includes('.render.com'));
             
-            if (!origin || allowedOrigins.includes(origin) || origin.startsWith('http://localhost:') || (isProduction && isSameOrigin)) {
+            // Allow conditions:
+            // 1. Same-origin (no origin header)
+            // 2. Localhost in any environment
+            // 3. Explicitly allowed origins
+            // 4. Render origins in production (if FRONTEND_URL not set, be permissive)
+            // 5. Any origin in production if FRONTEND_URL is not configured (fallback)
+            const shouldAllow = 
+                !origin || 
+                isSameOrigin || 
+                isLocalhost || 
+                allowedOrigins.includes(origin) ||
+                (isProduction && (isRenderOrigin || !process.env.FRONTEND_URL));
+            
+            if (shouldAllow) {
                 console.log('✅ CORS allowed for origin:', origin || '(same-origin)');
                 callback(null, true);
             } else {
                 console.warn('❌ CORS blocked for origin:', origin);
                 console.warn('   Allowed origins:', allowedOrigins);
+                console.warn('   FRONTEND_URL env var:', process.env.FRONTEND_URL || '(not set)');
+                console.warn('   💡 TIP: Set FRONTEND_URL env var on backend service to allow this origin');
                 callback(new Error('Not allowed by CORS'));
             }
         },
@@ -44,17 +59,29 @@ app.use(express.json());
 app.use((req, res, next) => {
     const isProduction = process.env.NODE_ENV === 'production';
     const requestOrigin = req.headers.origin;
+    const isLocalhost = requestOrigin && requestOrigin.startsWith('http://localhost:');
+    const isRenderOrigin = requestOrigin && (requestOrigin.includes('.onrender.com') || requestOrigin.includes('.render.com'));
     
     // Determine allowed origin
     let allowedOrigin = '*';
     if (isProduction) {
-        // In production, prefer FRONTEND_URL, but allow same-origin if not set
-        allowedOrigin = process.env.FRONTEND_URL || requestOrigin || '*';
+        // In production:
+        // 1. Prefer FRONTEND_URL if set
+        // 2. Allow Render origins if FRONTEND_URL not set (permissive fallback)
+        // 3. Allow same-origin requests
+        if (process.env.FRONTEND_URL) {
+            allowedOrigin = process.env.FRONTEND_URL;
+        } else if (isRenderOrigin) {
+            // Allow any Render origin if FRONTEND_URL not configured
+            allowedOrigin = requestOrigin;
+        } else if (requestOrigin) {
+            allowedOrigin = requestOrigin;
+        } else {
+            allowedOrigin = '*';
+        }
     } else {
         // In dev, allow localhost origins
-        allowedOrigin = requestOrigin && requestOrigin.startsWith('http://localhost:') 
-            ? requestOrigin 
-            : 'http://localhost:3000';
+        allowedOrigin = isLocalhost ? requestOrigin : 'http://localhost:3000';
     }
 
     res.header('Access-Control-Allow-Origin', allowedOrigin);
