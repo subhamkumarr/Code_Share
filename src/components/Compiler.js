@@ -116,9 +116,11 @@ const Compiler = ({ socketRef, roomId, code, language = 'javascript' }) => {
     try {
       // Determine backend URL (handled similar to socket.js)
       const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      // Default to localhost:5000 for dev if not specified
-      const backendUrl = process.env.REACT_APP_BACKEND_URL
-        || (isLocalhost ? 'http://localhost:5000' : window.location.origin);
+      const runtimeConfig = window.APP_CONFIG || {};
+      const runtimeUrl = (runtimeConfig.BACKEND_URL || '').trim();
+      const envUrl = (process.env.REACT_APP_BACKEND_URL || '').trim();
+      // Priority: runtime config > env var > defaults
+      const backendUrl = runtimeUrl || envUrl || (isLocalhost ? 'http://localhost:5000' : window.location.origin);
 
       const response = await fetch(`${backendUrl}/api/execute`, {
         method: 'POST',

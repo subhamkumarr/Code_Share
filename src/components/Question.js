@@ -12,9 +12,11 @@ const Question = ({ socketRef, roomId }) => {
     const apiBase = useMemo(() => {
         const isLocalhost =
             window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const runtimeConfig = window.APP_CONFIG || {};
+        const runtimeUrl = (runtimeConfig.BACKEND_URL || '').trim();
         const envUrl = (process.env.REACT_APP_BACKEND_URL || '').trim();
-        // Dev default: localhost server. Prod default: same-origin (single-service deployment).
-        return envUrl || (isLocalhost ? 'http://localhost:5000' : window.location.origin);
+        // Priority: runtime config > env var > defaults
+        return runtimeUrl || envUrl || (isLocalhost ? 'http://localhost:5000' : window.location.origin);
     }, []);
 
     const matchSlug = (input) => {
