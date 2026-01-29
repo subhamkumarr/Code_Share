@@ -17,7 +17,7 @@ import {
 
 const EditorPage = () => {
 
-  const [activeTab, setActiveTab] = useState('editor');
+  const [activeTab, setActiveTab] = useState('question');
   const socketRef = useRef(null);
   const codeRef = useRef(null);
   const hasShownSocketErrorRef = useRef(false);
@@ -179,21 +179,21 @@ const EditorPage = () => {
         {isSidebarOpen ? '◀' : '▶'}
       </button>
       <div className="editorWrap">
-        {/* Tabs for Editor / Whiteboard */}
+        {/* Tabs for Question / Whiteboard / Code Editor */}
         <div style={{ display: 'flex', background: '#1c1e29', borderBottom: '1px solid #44475a' }}>
           <button
-            onClick={() => setActiveTab('editor')}
+            onClick={() => setActiveTab('question')}
             style={{
               padding: '10px 20px',
-              background: activeTab === 'editor' ? '#282a36' : 'transparent',
-              color: activeTab === 'editor' ? '#4aee88' : '#fff',
+              background: activeTab === 'question' ? '#282a36' : 'transparent',
+              color: activeTab === 'question' ? '#4aee88' : '#fff',
               border: 'none',
               cursor: 'pointer',
               fontWeight: 'bold',
-              borderTop: activeTab === 'editor' ? '2px solid #4aee88' : '2px solid transparent'
+              borderTop: activeTab === 'question' ? '2px solid #4aee88' : '2px solid transparent'
             }}
           >
-            Code Editor
+            Question
           </button>
           <button
             onClick={() => setActiveTab('board')}
@@ -210,18 +210,18 @@ const EditorPage = () => {
             Whiteboard
           </button>
           <button
-            onClick={() => setActiveTab('question')}
+            onClick={() => setActiveTab('editor')}
             style={{
               padding: '10px 20px',
-              background: activeTab === 'question' ? '#282a36' : 'transparent',
-              color: activeTab === 'question' ? '#4aee88' : '#fff',
+              background: activeTab === 'editor' ? '#282a36' : 'transparent',
+              color: activeTab === 'editor' ? '#4aee88' : '#fff',
               border: 'none',
               cursor: 'pointer',
               fontWeight: 'bold',
-              borderTop: activeTab === 'question' ? '2px solid #4aee88' : '2px solid transparent'
+              borderTop: activeTab === 'editor' ? '2px solid #4aee88' : '2px solid transparent'
             }}
           >
-            Question
+            Code Editor
           </button>
         </div>
 
