@@ -264,7 +264,7 @@ const EditorPage = () => {
             zIndex: activeTab === 'board' ? 10 : 0,
             opacity: activeTab === 'board' ? 1 : 0
           }}>
-            <Board socket={socketRef.current} roomId={roomId} />
+            <Board socketRef={socketRef} roomId={roomId} />
           </div>
 
           {/* Question Container */}
@@ -279,7 +279,7 @@ const EditorPage = () => {
             opacity: activeTab === 'question' ? 1 : 0,
             backgroundColor: '#1c1e29'
           }}>
-            <Question socket={socketRef.current} roomId={roomId} />
+            <Question socketRef={socketRef} roomId={roomId} />
           </div>
         </div>
       </div>

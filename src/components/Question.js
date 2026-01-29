@@ -1,11 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import ACTIONS from '../Actions';
 import toast from 'react-hot-toast';
 
-const Question = ({ socket, roomId }) => {
+const Question = ({ socketRef, roomId }) => {
     const [url, setUrl] = useState('');
     const [question, setQuestion] = useState(null);
     const [loading, setLoading] = useState(false);
+
+    const socket = socketRef?.current;
+
+    const apiBase = useMemo(() => {
+        const isLocalhost =
+            window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const envUrl = (process.env.REACT_APP_BACKEND_URL || '').trim();
+        // Dev default: localhost server. Prod default: same-origin (single-service deployment).
+        return envUrl || (isLocalhost ? 'http://localhost:5000' : window.location.origin);
+    }, []);
 
     const matchSlug = (input) => {
         // Remove trailing slashes
@@ -36,12 +46,6 @@ const Question = ({ socket, roomId }) => {
         }
         setLoading(true);
         try {
-            // Use relative path in production (served by same origin)
-            // Use localhost:5000 in dev
-            const apiBase = process.env.NODE_ENV === 'production'
-                ? ''
-                : 'http://localhost:5000';
-
             console.log(`Fetching from: ${apiBase}/api/problem`);
 
             const res = await fetch(`${apiBase}/api/problem`, {
@@ -61,7 +65,9 @@ const Question = ({ socket, roomId }) => {
             } else {
                 setQuestion(data);
                 // Broadcast to others
-                socket.emit(ACTIONS.QUESTION_CHANGE, { roomId, question: data });
+                if (socket && socket.connected) {
+                    socket.emit(ACTIONS.QUESTION_CHANGE, { roomId, question: data });
+                }
             }
         } catch (err) {
             console.error(err);

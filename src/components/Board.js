@@ -4,8 +4,9 @@ import 'tldraw/tldraw.css';
 import ACTIONS from '../Actions';
 import toast from 'react-hot-toast';
 
-const Board = ({ socket, roomId }) => {
+const Board = ({ socketRef, roomId }) => {
     const [editor, setEditor] = useState(null);
+    const socket = socketRef?.current;
 
     // Handle Editor Mount
     const handleMount = (editorInstance) => {
@@ -38,10 +39,12 @@ const Board = ({ socket, roomId }) => {
 
                 // serialize changes to send over socket
                 // console.log('Board: Emitting changes');
-                socket.emit(ACTIONS.DRAWING_UPDATE, {
+                if (socket && socket.connected) {
+                    socket.emit(ACTIONS.DRAWING_UPDATE, {
                     roomId,
                     changes: changesToSend
-                });
+                    });
+                }
             }
         });
 
