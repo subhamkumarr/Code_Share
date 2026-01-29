@@ -15,10 +15,19 @@ const io = new Server(server, {
                 'http://localhost:3001',
                 'http://localhost:3002',
                 process.env.FRONTEND_URL
-            ];
-            if (!origin || allowedOrigins.includes(origin) || origin.startsWith('http://localhost:')) {
+            ].filter(Boolean); // Remove undefined values
+            
+            // In production, if FRONTEND_URL is set, use it; otherwise allow same-origin
+            // (for single-service deployments where backend serves frontend)
+            const isProduction = process.env.NODE_ENV === 'production';
+            const isSameOrigin = !origin; // Socket.IO may not send origin for same-origin
+            
+            if (!origin || allowedOrigins.includes(origin) || origin.startsWith('http://localhost:') || (isProduction && isSameOrigin)) {
+                console.log('✅ CORS allowed for origin:', origin || '(same-origin)');
                 callback(null, true);
             } else {
+                console.warn('❌ CORS blocked for origin:', origin);
+                console.warn('   Allowed origins:', allowedOrigins);
                 callback(new Error('Not allowed by CORS'));
             }
         },
@@ -33,11 +42,22 @@ app.use(express.json());
 
 // Enable CORS for API routes
 app.use((req, res, next) => {
-    const origin = process.env.NODE_ENV === 'production'
-        ? process.env.FRONTEND_URL
-        : 'http://localhost:3000';
+    const isProduction = process.env.NODE_ENV === 'production';
+    const requestOrigin = req.headers.origin;
+    
+    // Determine allowed origin
+    let allowedOrigin = '*';
+    if (isProduction) {
+        // In production, prefer FRONTEND_URL, but allow same-origin if not set
+        allowedOrigin = process.env.FRONTEND_URL || requestOrigin || '*';
+    } else {
+        // In dev, allow localhost origins
+        allowedOrigin = requestOrigin && requestOrigin.startsWith('http://localhost:') 
+            ? requestOrigin 
+            : 'http://localhost:3000';
+    }
 
-    res.header('Access-Control-Allow-Origin', origin || '*');
+    res.header('Access-Control-Allow-Origin', allowedOrigin);
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.header('Access-Control-Allow-Credentials', 'true');

@@ -107,7 +107,11 @@ const EditorPage = () => {
         );
       } catch (error) {
         console.error('Socket initialization error:', error);
-        toast.error("Failed to initialize socket connection. Please refresh and try again.");
+        const errorMsg = error.message || 'Unknown error';
+        toast.error(`Socket connection failed: ${errorMsg}`, {
+          duration: 5000,
+        });
+        console.error('Full error details:', error);
       }
     };
     init();
