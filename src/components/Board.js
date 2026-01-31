@@ -119,24 +119,12 @@ const Board = ({ socketRef, roomId }) => {
     }, [editor, socket, roomId]);
 
     return (
-        <div style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', backgroundColor: 'white' }}>
-            {/* Visual Probe to check if container is rendering and has size */}
-            <div style={{
-                position: 'absolute',
-                top: 10,
-                left: 10,
-                width: 50,
-                height: 50,
-                backgroundColor: 'red',
-                zIndex: 9999,
-                pointerEvents: 'none'
-            }} />
-
+        <div style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
             <ErrorBoundary>
                 <Tldraw
                     onMount={handleMount}
                     options={{ maxPages: 1 }} // Limit to 1 page for simplicity
-                // persistenceKey Removed to prevent local storage conflicts
+                    persistenceKey={roomId} // Use roomId to separate state and avoid corruption
                 />
             </ErrorBoundary>
         </div>
