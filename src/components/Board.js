@@ -4,6 +4,40 @@ import 'tldraw/tldraw.css';
 import ACTIONS from '../Actions';
 import toast from 'react-hot-toast';
 
+
+// Error Boundary Component
+class ErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false, error: null, errorInfo: null };
+    }
+
+    static getDerivedStateFromError(error) {
+        return { hasError: true };
+    }
+
+    componentDidCatch(error, errorInfo) {
+        console.error("Whiteboard Error:", error, errorInfo);
+        this.setState({ error, errorInfo });
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div style={{ padding: 20, color: 'white' }}>
+                    <h2>Whiteboard Error</h2>
+                    <p>Something went wrong with the whiteboard.</p>
+                    <details style={{ whiteSpace: 'pre-wrap' }}>
+                        {this.state.error && this.state.error.toString()}
+                    </details>
+                </div>
+            );
+        }
+
+        return this.props.children;
+    }
+}
+
 const Board = ({ socketRef, roomId }) => {
     const [editor, setEditor] = useState(null);
     const socket = socketRef?.current;
@@ -41,8 +75,8 @@ const Board = ({ socketRef, roomId }) => {
                 // console.log('Board: Emitting changes');
                 if (socket && socket.connected) {
                     socket.emit(ACTIONS.DRAWING_UPDATE, {
-                    roomId,
-                    changes: changesToSend
+                        roomId,
+                        changes: changesToSend
                     });
                 }
             }
@@ -85,12 +119,14 @@ const Board = ({ socketRef, roomId }) => {
     }, [editor, socket, roomId]);
 
     return (
-        <div style={{ position: 'absolute', inset: 0 }}>
-            <Tldraw
-                onMount={handleMount}
-                options={{ maxPages: 1 }} // Limit to 1 page for simplicity
-            // persistenceKey Removed to prevent local storage conflicts during dev/localhost testing
-            />
+        <div style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+            <ErrorBoundary>
+                <Tldraw
+                    onMount={handleMount}
+                    options={{ maxPages: 1 }} // Limit to 1 page for simplicity
+                // persistenceKey Removed to prevent local storage conflicts
+                />
+            </ErrorBoundary>
         </div>
     );
 };
