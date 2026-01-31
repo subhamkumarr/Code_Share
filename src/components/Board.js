@@ -53,8 +53,6 @@ const Board = ({ socketRef, roomId }) => {
         if (!editor || !socket) return;
         console.log('Board: Attaching listeners', socket.id);
 
-        /* 
-        // TEMPORARILY DISABLED: Testing if socket logic causes crash
         // Listener for local changes
         const cleanupListener = editor.store.listen((update) => {
             // console.log('Board: Update received', update);
@@ -118,10 +116,6 @@ const Board = ({ socketRef, roomId }) => {
             cleanupListener();
             socket.off(ACTIONS.DRAWING_UPDATE, handleRemoteUpdate);
         };
-        */
-
-        // Temporary dummy return to match expected types if needed, though cleanup function is optional
-        return () => { };
     }, [editor, socket, roomId]);
 
     return (
@@ -131,6 +125,7 @@ const Board = ({ socketRef, roomId }) => {
                     onMount={handleMount}
                     options={{ maxPages: 1 }} // Limit to 1 page for simplicity
                     persistenceKey={roomId} // Use roomId to separate state and avoid corruption
+                    licenseKey={process.env.REACT_APP_TLDRAW_LICENSE_KEY} // Use license key from environment variables
                 />
             </ErrorBoundary>
         </div>
